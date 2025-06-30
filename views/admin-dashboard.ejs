@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - DevCraft Solutions</title>
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="/" class="sidebar-logo">DevCraft Admin</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#dashboard" class="nav-item active">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </a>
+        <a href="#projects" class="nav-item">
+          <span class="nav-icon">📁</span>
+          Projects
+        </a>
+        <a href="#contacts" class="nav-item">
+          <span class="nav-icon">📧</span>
+          Contact Forms
+        </a>
+        <a href="#clients" class="nav-item">
+          <span class="nav-icon">👥</span>
+          Clients
+        </a>
+        <a href="#team" class="nav-item">
+          <span class="nav-icon">👤</span>
+          Team Members
+        </a>
+        <a href="#analytics" class="nav-item">
+          <span class="nav-icon">📈</span>
+          Analytics
+        </a>
+        <a href="#settings" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="admin-header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+          <h1 class="header-title">Dashboard</h1>
+        </div>
+        <div class="header-actions">
+          <div class="user-info">
+            <div class="user-avatar"><%= user.name ? user.name.charAt(0).toUpperCase() : 'A' %></div>
+            <span><%= user.name || 'Admin User' %></span>
+          </div>
+          <button class="logout-btn" onclick="location.href='/admin/logout'">Logout</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon primary">📁</div>
+            <div class="stat-content">
+              <h3><%= stats.totalProjects %></h3>
+              <p>Total Projects</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon success">✅</div>
+            <div class="stat-content">
+              <h3><%= stats.completedProjects %></h3>
+              <p>Completed Projects</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon warning">📧</div>
+            <div class="stat-content">
+              <h3><%= stats.pendingContacts %></h3>
+              <p>Pending Contacts</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon danger">💰</div>
+            <div class="stat-content">
+              <h3>$<%= stats.monthlyRevenue %>k</h3>
+              <p>Monthly Revenue</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <h3>Quick Actions</h3>
+          <div class="actions-grid">
+            <div class="action-card" onclick="showModal('projectModal')">
+              <div class="action-icon">➕</div>
+              <div class="action-title">New Project</div>
+            </div>
+            <div class="action-card" onclick="showModal('clientModal')">
+              <div class="action-icon">👤</div>
+              <div class="action-title">Add Client</div>
+            </div>
+            <div class="action-card" onclick="generateReport()">
+              <div class="action-icon">📊</div>
+              <div class="action-title">Generate Report</div>
+            </div>
+            <div class="action-card" onclick="showModal('invoiceModal')">
+              <div class="action-icon">💳</div>
+              <div class="action-title">Create Invoice</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Projects Table -->
+        <div class="table-container">
+          <div class="table-header">
+            <h3 class="table-title">Recent Projects</h3>
+            <button class="btn btn-primary" onclick="showModal('projectModal')">
+              <span>+</span> Add Project
+            </button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Project Name</th>
+                <th>Client</th>
+                <th>Category</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recentProjects.forEach(function(project) { %>
+                <tr>
+                  <td><strong><%= project.title %></strong></td>
+                  <td><%= project.client %></td>
+                  <td><%= project.categoryName %></td>
+                  <td>
+                    <span class="status-badge status-<%= project.status %>">
+                      <%= project.statusLabel %>
+                    </span>
+                  </td>
+                  <td><%= project.progress %>%</td>
+                  <td class="actions-cell">
+                    <button class="btn btn-sm btn-primary" onclick="editProject('<%= project.id %>')">Edit</button>
+                    <button class="btn btn-sm btn-secondary" onclick="viewProject('<%= project.id %>')">View</button>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Contact Form Submissions -->
+        <div class="table-container">
+          <div class="table-header">
+            <h3 class="table-title">Recent Contact Form Submissions</h3>
+            <button class="btn btn-secondary" onclick="exportContacts()">Export CSV</button>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% recentContacts.forEach(function(contact) { %>
+                <tr>
+                  <td><%= contact.name %></td>
+                  <td><%= contact.email %></td>
+                  <td><%= contact.message.substring(0, 50) %>...</td>
+                  <td><%= contact.date %></td>
+                  <td>
+                    <span class="status-badge status-<%= contact.status %>">
+                      <%= contact.statusLabel %>
+                    </span>
+                  </td>
+                  <td class="actions-cell">
+                    <button class="btn btn-sm btn-success" onclick="replyContact('<%= contact.id %>')">
+                      <%= contact.status === 'new' ? 'Reply' : 'View' %>
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="archiveContact('<%= contact.id %>')">Archive</button>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid">
+          <div class="chart-container">
+            <h3 class="chart-title">Project Status Overview</h3>
+            <canvas id="projectChart" height="200"></canvas>
+          </div>
+          <div class="chart-container">
+            <h3 class="chart-title">Revenue Trend</h3>
+            <canvas id="revenueChart" height="200"></canvas>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Project Modal -->
+  <div class="modal-overlay" id="projectModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Add New Project</h2>
+        <button class="modal-close" onclick="closeModal('projectModal')">×</button>
+      </div>
+      <form action="/admin/projects" method="POST">
+        <div class="form-group">
+          <label>Project Title</label>
+          <input type="text" name="title" placeholder="Enter project title" required>
+        </div>
+        <div class="form-group">
+          <label>Client Name</label>
+          <input type="text" name="client" placeholder="Enter client name" required>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select name="category" required>
+            <option value="">Select category</option>
+            <option value="web">Web Development</option>
+            <option value="mobile">Mobile Apps</option>
+            <option value="cloud">Cloud Solutions</option>
+            <option value="ai">AI Integration</option>
+            <option value="security">Cybersecurity</option>
+            <option value="analytics">Data Analytics</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" rows="4" placeholder="Enter project description" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Technologies</label>
+          <input type="text" name="technologies" placeholder="React, Node.js, AWS (comma separated)">
+        </div>
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" name="startDate" required>
+        </div>
+        <div class="form-group">
+          <label>Expected Duration</label>
+          <input type="text" name="duration" placeholder="e.g., 3 months">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('projectModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/admin.js"></script>
+  <script>
+    // Initialize chart data from ser
+    const chartData = {
+      projectStatus: <%- JSON.stringify(chartData.projectStatus) %>,
+      revenue: <%- JSON.stringify(chartData.revenue) %>
+    };
+
+    // Initialize charts
+    initializeCharts(chartData);
+  </script>
+</body>
+</html>
