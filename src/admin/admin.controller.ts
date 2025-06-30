@@ -8,7 +8,6 @@ export class AdminController {
   @Get()
   @Render('admin-dashboard')
   async getDashboard() {
-    // Return an object with all the data needed for the view
     return {
       user: { name: 'Admin User' },
       stats: {
