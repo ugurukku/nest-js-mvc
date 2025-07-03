@@ -391,20 +391,6 @@
         </div>
       </div>
 
-      <div class="content-section">
-        <h2 class="section-title">
-          <span class="section-icon">✨</span>
-          Key Features
-        </h2>
-        <ul class="features-list">
-          <% project.features.forEach(function(feature) { %>
-            <li>
-              <span class="feature-icon">✓</span>
-              <%= feature %>
-            </li>
-          <% }); %>
-        </ul>
-      </div>
 
       <div class="content-section">
         <h2 class="section-title">
@@ -420,21 +406,6 @@
             <h4>Our Solution</h4>
             <p><%= project.solution %></p>
           </div>
-        </div>
-      </div>
-
-      <div class="content-section">
-        <h2 class="section-title">
-          <span class="section-icon">📊</span>
-          Project Results
-        </h2>
-        <div class="results-grid">
-          <% project.results.forEach(function(result) { %>
-            <div class="result-card">
-              <div class="result-number"><%= result.value %></div>
-              <div class="result-label"><%= result.label %></div>
-            </div>
-          <% }); %>
         </div>
       </div>
 

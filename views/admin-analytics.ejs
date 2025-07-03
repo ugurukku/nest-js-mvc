@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics - DevCraft Admin</title>
+  <link rel="stylesheet" href="../css/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin" class="sidebar-logo">DevCraft Admin</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin" class="nav-item">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </a>
+        <a href="/admin/projects" class="nav-item">
+          <span class="nav-icon">📁</span>
+          Projects
+        </a>
+        <a href="/admin/contacts" class="nav-item">
+          <span class="nav-icon">📧</span>
+          Contact Forms
+        </a>
+        <a href="/admin/team" class="nav-item">
+          <span class="nav-icon">👥</span>
+          Team Members
+        </a>
+        <a href="/admin/analytics" class="nav-item active">
+          <span class="nav-icon">📈</span>
+          Analytics
+        </a>
+        <a href="/admin/settings" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="admin-header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+          <h1 class="header-title">Analytics Dashboard</h1>
+        </div>
+        <div class="header-actions">
+          <div class="user-info">
+            <div class="user-avatar"><%= user.name ? user.name.charAt(0).toUpperCase() : 'A' %></div>
+            <span><%= user.name || 'Admin User' %></span>
+          </div>
+          <button class="logout-btn" onclick="location.href='/admin/logout'">Logout</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Period Filter -->
+        <div class="page-header">
+          <div class="period-selector">
+            <label>Time Period:</label>
+            <select onchange="changePeriod(this.value)" class="filter-select">
+              <option value="7d" <%= currentPeriod === '7d' ? 'selected' : '' %>>Last 7 days</option>
+              <option value="30d" <%= currentPeriod === '30d' ? 'selected' : '' %>>Last 30 days</option>
+              <option value="90d" <%= currentPeriod === '90d' ? 'selected' : '' %>>Last 90 days</option>
+              <option value="365d" <%= currentPeriod === '365d' ? 'selected' : '' %>>Last year</option>
+            </select>
+          </div>
+          <button class="btn btn-secondary" onclick="exportReport()">
+            📊 Export Report
+          </button>
+        </div>
+
+        <!-- Key Metrics Cards -->
+        <div class="analytics-grid">
+          <div class="metric-card">
+            <div class="metric-header">
+              <h3>Projects</h3>
+              <span class="metric-icon">📁</span>
+            </div>
+            <div class="metric-stats">
+              <div class="metric-item">
+                <span class="metric-value"><%= analytics.projects.total %></span>
+                <span class="metric-label">Total</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-value"><%= analytics.projects.completed %></span>
+                <span class="metric-label">Completed</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-value"><%= analytics.projects.inProgress %></span>
+                <span class="metric-label">In Progress</span>
+              </div>
+            </div>
+            <div class="metric-chart">
+              <canvas id="projectsChart" width="100" height="60"></canvas>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <h3>Contacts</h3>
+              <span class="metric-icon">📧</span>
+            </div>
+            <div class="metric-stats">
+              <div class="metric-item">
+                <span class="metric-value"><%= analytics.contacts.total %></span>
+                <span class="metric-label">Total</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-value"><%= analytics.contacts.new %></span>
+                <span class="metric-label">New</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-value"><%= analytics.contacts.converted %></span>
+                <span class="metric-label">Converted</span>
+              </div>
+            </div>
+            <div class="metric-chart">
+              <canvas id="contactsChart" width="100" height="60"></canvas>
+            </div>
+          </div>
+
+          <div class="metric-card">
+            <div class="metric-header">
+              <h3>Revenue</h3>
+              <span class="metric-icon">💰</span>
+            </div>
+            <div class="metric-stats">
+              <div class="metric-item">
+                <span class="metric-value">$<%= (analytics.revenue.total / 1000).toFixed(0) %>k</span>
+                <span class="metric-label">Total Revenue</span>
+              </div>
+              <div class="metric-item">
+                <span class="metric-value">$<%= ((analytics.revenue.total / analytics.projects.completed) / 1000).toFixed(0) %>k</span>
+                <span class="metric-label">Avg Project</span>
+              </div>
+            </div>
+            <div class="metric-chart">
+              <canvas id="revenueChart" width="100" height="60"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Charts -->
+        <div class="charts-grid">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>Project Status Distribution</h3>
+              <div class="chart-controls">
+                <button class="btn btn-sm btn-secondary" onclick="refreshChart('projectStatusChart')">🔄</button>
+              </div>
+            </div>
+            <canvas id="projectStatusChart"></canvas>
+          </div>
+
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>Monthly Revenue Trend</h3>
+              <div class="chart-controls">
+                <button class="btn btn-sm btn-secondary" onclick="refreshChart('revenueTrendChart')">🔄</button>
+              </div>
+            </div>
+            <canvas id="revenueTrendChart"></canvas>
+          </div>
+
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>Contact Conversion Funnel</h3>
+              <div class="chart-controls">
+                <button class="btn btn-sm btn-secondary" onclick="refreshChart('conversionChart')">🔄</button>
+              </div>
+            </div>
+            <canvas id="conversionChart"></canvas>
+          </div>
+
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3>Team Performance</h3>
+              <div class="chart-controls">
+                <button class="btn btn-sm btn-secondary" onclick="refreshChart('teamChart')">🔄</button>
+              </div>
+            </div>
+            <canvas id="teamChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Performance Tables -->
+        <div class="performance-section">
+          <div class="performance-table">
+            <div class="table-header">
+              <h3>Top Performing Projects</h3>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Project</th>
+                  <th>Client</th>
+                  <th>Revenue</th>
+                  <th>Completion</th>
+                  <th>ROI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>E-Commerce Platform</td>
+                  <td>TechCorp</td>
+                  <td>$125k</td>
+                  <td>100%</td>
+                  <td>340%</td>
+                </tr>
+                <tr>
+                  <td>Mobile Banking App</td>
+                  <td>FinanceInc</td>
+                  <td>$89k</td>
+                  <td>95%</td>
+                  <td>280%</td>
+                </tr>
+                <tr>
+                  <td>AI Analytics Tool</td>
+                  <td>DataFlow</td>
+                  <td>$156k</td>
+                  <td>85%</td>
+                  <td>420%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="performance-table">
+            <div class="table-header">
+              <h3>Lead Sources</h3>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Source</th>
+                  <th>Contacts</th>
+                  <th>Conversion Rate</th>
+                  <th>Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Direct Website</td>
+                  <td>45</td>
+                  <td>24%</td>
+                  <td>$234k</td>
+                </tr>
+                <tr>
+                  <td>Referrals</td>
+                  <td>28</td>
+                  <td>35%</td>
+                  <td>$189k</td>
+                </tr>
+                <tr>
+                  <td>Social Media</td>
+                  <td>67</td>
+                  <td>18%</td>
+                  <td>$156k</td>
+                </tr>
+                <tr>
+                  <td>Search Engines</td>
+                  <td>52</td>
+                  <td>22%</td>
+                  <td>$198k</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/admin.js"></script>
+  <script>
+    // Initialize analytics charts
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeAnalyticsCharts();
+    });
+
+    function initializeAnalyticsCharts() {
+      // Mini project chart
+      new Chart(document.getElementById('projectsChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Completed', 'In Progress', 'Planning'],
+          datasets: [{
+            data: [<%= analytics.projects.completed %>, <%= analytics.projects.inProgress %>, <%= analytics.projects.total - analytics.projects.completed - analytics.projects.inProgress %>],
+            backgroundColor: ['#10B981', '#F59E0B', '#6B7280']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // Mini contacts chart
+      new Chart(document.getElementById('contactsChart'), {
+        type: 'bar',
+        data: {
+          labels: ['New', 'Replied', 'Converted'],
+          datasets: [{
+            data: [<%= analytics.contacts.new %>, <%= analytics.contacts.replied %>, <%= analytics.contacts.converted %>],
+            backgroundColor: ['#3B82F6', '#8B5CF6', '#10B981']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { x: { display: false }, y: { display: false } }
+        }
+      });
+
+      // Mini revenue chart
+      new Chart(document.getElementById('revenueChart'), {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            data: [85, 92, 78, 95, 110, 125],
+            borderColor: '#10B981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: { x: { display: false }, y: { display: false } }
+        }
+      });
+
+      // Project status distribution
+      new Chart(document.getElementById('projectStatusChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Completed', 'Active', 'Planning', 'On Hold'],
+          datasets: [{
+            data: [38, 12, 4, 2],
+            backgroundColor: ['#10B981', '#F59E0B', '#6B7280', '#EF4444']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      // Revenue trend
+      new Chart(document.getElementById('revenueTrendChart'), {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+          datasets: [{
+            label: 'Revenue ($k)',
+            data: [85, 92, 78, 95, 110, 125],
+            borderColor: '#3B82F6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+
+      // Conversion funnel
+      new Chart(document.getElementById('conversionChart'), {
+        type: 'bar',
+        data: {
+          labels: ['Inquiries', 'Qualified', 'Proposals', 'Closed'],
+          datasets: [{
+            label: 'Count',
+            data: [120, 85, 45, 28],
+            backgroundColor: ['#3B82F6', '#8B5CF6', '#F59E0B', '#10B981']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+
+      // Team performance
+      new Chart(document.getElementById('teamChart'), {
+        type: 'radar',
+        data: {
+          labels: ['Projects', 'Quality', 'Speed', 'Communication', 'Innovation'],
+          datasets: [{
+            label: 'Team Performance',
+            data: [85, 92, 78, 88, 95],
+            borderColor: '#8B5CF6',
+            backgroundColor: 'rgba(139, 92, 246, 0.2)'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            r: {
+              min: 0,
+              max: 100
+            }
+          }
+        }
+      });
+    }
+
+    function changePeriod(period) {
+      const url = new URL(window.location);
+      url.searchParams.set('period', period);
+      window.location.href = url.toString();
+    }
+
+    function refreshChart(chartId) {
+      // Refresh specific chart data
+      location.reload();
+    }
+
+    function exportReport() {
+      // Generate and download analytics report
+      const period = '<%= currentPeriod %>';
+      window.open(`/admin/analytics/export?period=${period}`, '_blank');
+    }
+  </script>
+</body>
+</html>

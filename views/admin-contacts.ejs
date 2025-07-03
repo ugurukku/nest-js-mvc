@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contacts Management - DevCraft Admin</title>
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin" class="sidebar-logo">DevCraft Admin</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin" class="nav-item">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </a>
+        <a href="/admin/projects" class="nav-item">
+          <span class="nav-icon">📁</span>
+          Projects
+        </a>
+        <a href="/admin/contacts" class="nav-item active">
+          <span class="nav-icon">📧</span>
+          Contact Forms
+        </a>
+        <a href="/admin/team" class="nav-item">
+          <span class="nav-icon">👥</span>
+          Team Members
+        </a>
+        <a href="/admin/analytics" class="nav-item">
+          <span class="nav-icon">📈</span>
+          Analytics
+        </a>
+        <a href="/admin/settings" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="admin-header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+          <h1 class="header-title">Contact Management</h1>
+        </div>
+        <div class="header-actions">
+          <div class="user-info">
+            <div class="user-avatar"><%= user.name ? user.name.charAt(0).toUpperCase() : 'A' %></div>
+            <span><%= user.name || 'Admin User' %></span>
+          </div>
+          <button class="logout-btn" onclick="location.href='/admin/logout'">Logout</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Filters and Actions -->
+        <div class="page-header">
+          <div class="filters">
+            <select onchange="filterContacts(this.value)" class="filter-select">
+              <option value="">All Contacts</option>
+              <option value="new" <%= currentStatus === 'new' ? 'selected' : '' %>>New</option>
+              <option value="replied" <%= currentStatus === 'replied' ? 'selected' : '' %>>Replied</option>
+              <option value="converted" <%= currentStatus === 'converted' ? 'selected' : '' %>>Converted</option>
+              <option value="archived" <%= currentStatus === 'archived' ? 'selected' : '' %>>Archived</option>
+            </select>
+          </div>
+          <div class="actions">
+            <button class="btn btn-secondary" onclick="exportContacts()">
+              📊 Export CSV
+            </button>
+            <button class="btn btn-primary" onclick="bulkActions()">
+              ⚙️ Bulk Actions
+            </button>
+          </div>
+        </div>
+
+        <!-- Contacts Table -->
+        <div class="table-container">
+          <table class="contacts-table">
+            <thead>
+              <tr>
+                <th>
+                  <input type="checkbox" onchange="selectAll(this)">
+                </th>
+                <th>Contact Info</th>
+                <th>Subject</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% contacts.forEach(function(contact) { %>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="contactIds" value="<%= contact.id %>">
+                  </td>
+                  <td>
+                    <div class="contact-info">
+                      <strong><%= contact.name %></strong>
+                      <br>
+                      <small><%= contact.email %></small>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="contact-subject">
+                      <%= contact.subject || 'No subject' %>
+                    </span>
+                  </td>
+                  <td>
+                    <div class="contact-message">
+                      <%= contact.message.length > 100 ? contact.message.substring(0, 100) + '...' : contact.message %>
+                    </div>
+                  </td>
+                  <td>
+                    <span class="contact-date">
+                      <%= new Date(contact.createdAt).toLocaleDateString() %>
+                    </span>
+                  </td>
+                  <td>
+                    <span class="status-badge status-<%= contact.status %>">
+                      <%= contact.status.toUpperCase() %>
+                    </span>
+                  </td>
+                  <td class="actions-cell">
+                    <button class="btn btn-sm btn-primary" onclick="viewContact('<%= contact.id %>')">
+                      👁️ View
+                    </button>
+                    <% if (contact.status === 'new') { %>
+                      <button class="btn btn-sm btn-success" onclick="replyContact('<%= contact.id %>')">
+                        ✉️ Reply
+                      </button>
+                    <% } %>
+                    <button class="btn btn-sm btn-warning" onclick="markConverted('<%= contact.id %>')">
+                      ✅ Convert
+                    </button>
+                    <button class="btn btn-sm btn-secondary" onclick="archiveContact('<%= contact.id %>')">
+                      📦 Archive
+                    </button>
+                  </td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <% if (pagination.pages > 1) { %>
+          <div class="pagination">
+            <% if (pagination.page > 1) { %>
+              <a href="?page=<%= pagination.page - 1 %><%= currentStatus ? '&status=' + currentStatus : '' %>" class="pagination-btn">← Previous</a>
+            <% } %>
+            
+            <% for (let i = 1; i <= pagination.pages; i++) { %>
+              <% if (i === pagination.page) { %>
+                <span class="pagination-btn active"><%= i %></span>
+              <% } else { %>
+                <a href="?page=<%= i %><%= currentStatus ? '&status=' + currentStatus : '' %>" class="pagination-btn"><%= i %></a>
+              <% } %>
+            <% } %>
+            
+            <% if (pagination.page < pagination.pages) { %>
+              <a href="?page=<%= pagination.page + 1 %><%= currentStatus ? '&status=' + currentStatus : '' %>" class="pagination-btn">Next →</a>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </main>
+  </div>
+
+  <!-- Contact Detail Modal -->
+  <div class="modal-overlay" id="contactModal">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h2 class="modal-title">Contact Details</h2>
+        <button class="modal-close" onclick="closeModal('contactModal')">×</button>
+      </div>
+      <div class="modal-body" id="contactDetails">
+        <!-- Contact details will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Reply Modal -->
+  <div class="modal-overlay" id="replyModal">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h2 class="modal-title">Reply to Contact</h2>
+        <button class="modal-close" onclick="closeModal('replyModal')">×</button>
+      </div>
+      <form id="replyForm">
+        <div class="form-group">
+          <label>To:</label>
+          <input type="email" id="replyTo" readonly>
+        </div>
+        <div class="form-group">
+          <label>Subject:</label>
+          <input type="text" id="replySubject" placeholder="Re: Contact Form Submission">
+        </div>
+        <div class="form-group">
+          <label>Message:</label>
+          <textarea id="replyMessage" rows="8" placeholder="Enter your reply..."></textarea>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('replyModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Send Reply</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/admin.js"></script>
+  <script>
+    function filterContacts(status) {
+      const url = new URL(window.location);
+      if (status) {
+        url.searchParams.set('status', status);
+      } else {
+        url.searchParams.delete('status');
+      }
+      url.searchParams.delete('page');
+      window.location.href = url.toString();
+    }
+
+    function selectAll(checkbox) {
+      const checkboxes = document.querySelectorAll('input[name="contactIds"]');
+      checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    }
+
+    function viewContact(id) {
+      // Fetch contact details and show in modal
+      fetch(`/admin/contacts/${id}`)
+        .then(response => response.json())
+        .then(contact => {
+          document.getElementById('contactDetails').innerHTML = `
+            <div class="contact-detail">
+              <h3>${contact.name}</h3>
+              <p><strong>Email:</strong> ${contact.email}</p>
+              <p><strong>Subject:</strong> ${contact.subject || 'No subject'}</p>
+              <p><strong>Date:</strong> ${new Date(contact.createdAt).toLocaleString()}</p>
+              <p><strong>Status:</strong> <span class="status-badge status-${contact.status}">${contact.status.toUpperCase()}</span></p>
+              <div class="message-content">
+                <strong>Message:</strong>
+                <div class="message-text">${contact.message}</div>
+              </div>
+            </div>
+          `;
+          showModal('contactModal');
+        });
+    }
+
+    function replyContact(id) {
+      // Fetch contact info and prepare reply
+      fetch(`/admin/contacts/${id}`)
+        .then(response => response.json())
+        .then(contact => {
+          document.getElementById('replyTo').value = contact.email;
+          document.getElementById('replySubject').value = `Re: ${contact.subject || 'Contact Form Submission'}`;
+          showModal('replyModal');
+        });
+    }
+
+    function markConverted(id) {
+      if (confirm('Mark this contact as converted?')) {
+        updateContactStatus(id, 'converted');
+      }
+    }
+
+    function archiveContact(id) {
+      if (confirm('Archive this contact?')) {
+        updateContactStatus(id, 'archived');
+      }
+    }
+
+    function updateContactStatus(id, status) {
+      fetch(`/admin/contacts/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status })
+      }).then(() => {
+        location.reload();
+      });
+    }
+
+    function exportContacts() {
+      window.open('/admin/contacts/export', '_blank');
+    }
+
+    function bulkActions() {
+      const selectedContacts = Array.from(document.querySelectorAll('input[name="contactIds"]:checked'))
+        .map(cb => cb.value);
+      
+      if (selectedContacts.length === 0) {
+        alert('Please select contacts for bulk action');
+        return;
+      }
+
+      const action = prompt('Enter action (archive, convert, reply):');
+      if (action && ['archive', 'convert', 'reply'].includes(action)) {
+        // Implement bulk actions
+        console.log(`Bulk ${action} for contacts:`, selectedContacts);
+      }
+    }
+  </script>
+</body>
+</html>

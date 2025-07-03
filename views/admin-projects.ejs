@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects Management - DevCraft Admin</title>
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin" class="sidebar-logo">DevCraft Admin</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin" class="nav-item">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </a>
+        <a href="/admin/projects" class="nav-item active">
+          <span class="nav-icon">📁</span>
+          Projects
+        </a>
+        <a href="/admin/contacts" class="nav-item">
+          <span class="nav-icon">📧</span>
+          Contact Forms
+        </a>
+        <a href="/admin/team" class="nav-item">
+          <span class="nav-icon">👥</span>
+          Team Members
+        </a>
+        <a href="/admin/analytics" class="nav-item">
+          <span class="nav-icon">📈</span>
+          Analytics
+        </a>
+        <a href="/admin/settings" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="admin-header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+          <h1 class="header-title">Projects Management</h1>
+        </div>
+        <div class="header-actions">
+          <div class="user-info">
+            <div class="user-avatar"><%= user.name ? user.name.charAt(0).toUpperCase() : 'A' %></div>
+            <span><%= user.name || 'Admin User' %></span>
+          </div>
+          <button class="logout-btn" onclick="location.href='/admin/logout'">Logout</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Filters and Actions -->
+        <div class="page-header">
+          <div class="filters">
+            <select onchange="filterProjects(this.value)" class="filter-select">
+              <option value="">All Projects</option>
+              <option value="planning" <%= currentStatus === 'planning' ? 'selected' : '' %>>Planning</option>
+              <option value="active" <%= currentStatus === 'active' ? 'selected' : '' %>>Active</option>
+              <option value="completed" <%= currentStatus === 'completed' ? 'selected' : '' %>>Completed</option>
+              <option value="on_hold" <%= currentStatus === 'on_hold' ? 'selected' : '' %>>On Hold</option>
+              <option value="cancelled" <%= currentStatus === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="showModal('projectModal')">
+            <span>+</span> Add Project
+          </button>
+        </div>
+
+        <!-- Projects Grid -->
+        <div class="projects-grid">
+          <% projects.forEach(function(project) { %>
+            <div class="project-card">
+              <div class="project-header">
+                <h3><%= project.title %></h3>
+                <span class="status-badge status-<%= project.status %>">
+                  <%= project.status.replace('_', ' ').toUpperCase() %>
+                </span>
+              </div>
+              
+              <div class="project-info">
+                <p class="project-client">
+                  <strong>Client:</strong> <%= project.client ? project.client.name : 'No client assigned' %>
+                </p>
+                <p class="project-category">
+                  <strong>Category:</strong> <%= project.category ? project.category.name : 'Uncategorized' %>
+                </p>
+                <% if (project.budget) { %>
+                  <p class="project-budget">
+                    <strong>Budget:</strong> $<%= project.budget.toLocaleString() %>
+                  </p>
+                <% } %>
+              </div>
+
+              <div class="project-progress">
+                <div class="progress-header">
+                  <span>Progress</span>
+                  <span><%= project.progress %>%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: <%= project.progress %>%"></div>
+                </div>
+              </div>
+
+              <div class="project-meta">
+                <small>Tasks: <%= project._count ? project._count.tasks : 0 %></small>
+                <small>Created: <%= new Date(project.createdAt).toLocaleDateString() %></small>
+              </div>
+
+              <div class="project-actions">
+                <button class="btn btn-sm btn-primary" onclick="window.location.href='/admin/projects/<%= project.id %>'">
+                  View Details
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="editProject('<%= project.id %>')">
+                  Edit
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="deleteProject('<%= project.id %>')">
+                  Delete
+                </button>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+
+        <!-- Pagination -->
+        <% if (pagination.pages > 1) { %>
+          <div class="pagination">
+            <% if (pagination.page > 1) { %>
+              <a href="?page=<%= pagination.page - 1 %><%= currentStatus ? '&status=' + currentStatus : '' %>" class="pagination-btn">← Previous</a>
+            <% } %>
+            
+            <% for (let i = 1; i <= pagination.pages; i++) { %>
+              <% if (i === pagination.page) { %>
+                <span class="pagination-btn active"><%= i %></span>
+              <% } else { %>
+                <a href="?page=<%= i %><%= currentStatus ? '&status=' + currentStatus : '' %>" class="pagination-btn"><%= i %></a>
+              <% } %>
+            <% } %>
+            
+            <% if (pagination.page < pagination.pages) { %>
+              <a href="?page=<%= pagination.page + 1 %><%= currentStatus ? '&status=' + currentStatus : '' %>" class="pagination-btn">Next →</a>
+            <% } %>
+          </div>
+        <% } %>
+      </div>
+    </main>
+  </div>
+
+  <!-- Add/Edit Project Modal -->
+  <div class="modal-overlay" id="projectModal">
+    <div class="modal modal-large">
+      <div class="modal-header">
+        <h2 class="modal-title">Add New Project</h2>
+        <button class="modal-close" onclick="closeModal('projectModal')">×</button>
+      </div>
+      <form action="/admin/projects" method="POST">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Project Title</label>
+            <input type="text" name="title" placeholder="Enter project title" required>
+          </div>
+          <div class="form-group">
+            <label>Client</label>
+            <select name="clientId">
+              <option value="">Select client</option>
+              <!-- Populate with clients from database -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select name="categoryId">
+              <option value="">Select category</option>
+              <!-- Populate with categories from database -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Budget</label>
+            <input type="number" name="budget" placeholder="Enter budget amount">
+          </div>
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" name="startDate">
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="date" name="endDate">
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" rows="4" placeholder="Enter project description"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label>Technologies</label>
+          <input type="text" name="technologies" placeholder="React, Node.js, AWS (comma separated)">
+        </div>
+        
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('projectModal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Project</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../js/admin.js"></script>
+  <script>
+    function filterProjects(status) {
+      const url = new URL(window.location);
+      if (status) {
+        url.searchParams.set('status', status);
+      } else {
+        url.searchParams.delete('status');
+      }
+      url.searchParams.delete('page');
+      window.location.href = url.toString();
+    }
+
+    function editProject(id) {
+      // Open edit modal with project data
+      window.location.href = `/admin/projects/${id}`;
+    }
+
+    function deleteProject(id) {
+      if (confirm('Are you sure you want to delete this project?')) {
+        fetch(`/admin/projects/${id}`, {
+          method: 'DELETE'
+        }).then(() => {
+          location.reload();
+        });
+      }
+    }
+  </script>
+</body>
+</html>

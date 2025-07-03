@@ -259,7 +259,7 @@
       </div>
 
       <div class="portfolio-grid">
-        <% portfolioItems.forEach(function(item) { %>
+        <% if (portfolioItems && Array.isArray(portfolioItems)) portfolioItems.forEach(function(item) { %>
           <div class="portfolio-card" data-category="<%= item.category %>">
             <div class="portfolio-image">
               <%= item.icon %>

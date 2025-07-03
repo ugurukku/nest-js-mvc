@@ -7,8 +7,8 @@ export class ProjectsController {
 
   @Get()
   @Render('projects')
-  findAll() {
-    const portfolioItems = this.projectsService.getAllProjects();
+  async findAll(@Param() category?: string) {
+    const portfolioItems = await this.projectsService.getAllProjects(category);
     return {
       portfolioItems,
       title: 'Our Portfolio - DevCraft Solutions'
@@ -18,13 +18,13 @@ export class ProjectsController {
 
   @Get(':id')
   @Render('project-details')
-  getPortfolioDetail(@Param('id') id: string) {
-    const project = this.projectsService.getProjectById(+id);
-    if (project)
-      return {
-        project,
-        title: `${project.title} - DevCraft Solutions`
-      };
+  async getPortfolioDetail(@Param('id') id: string) {
+    const project = await this.projectsService.getProjectById(+id);
+    console.log(id);
+    console.log(project)
+    return {
+      project,
+    };
   }
 
 }

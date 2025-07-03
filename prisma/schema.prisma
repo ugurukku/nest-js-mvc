@@ -9,15 +9,138 @@ datasource db {
 }
 
 model Employee {
-  id        Int      @id @default(autoincrement())
+  id          Int                 @id @default(autoincrement())
+  name        String
+  email       String              @unique
+  role        Role
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @default(now()) @updatedAt
+  projectTeam ProjectTeamMember[]
+
+  Task Task[]
+}
+
+model Project {
+  id           Int           @id @default(autoincrement())
+  title        String
+  description  String?
+  status       ProjectStatus @default(planning)
+  budget       Float?
+  startDate    DateTime?
+  endDate      DateTime?
+  duration     String?
+  technologies String[]
+  progress     Int           @default(0)
+  clientId     Int?
+  categoryId   Int?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  client   Client?             @relation(fields: [clientId], references: [id])
+  category Category?           @relation(fields: [categoryId], references: [id])
+  team     ProjectTeamMember[]
+  tasks    Task[]
+}
+
+model Client {
+  id        Int       @id @default(autoincrement())
   name      String
-  email     String   @unique
-  role      Role
+  email     String    @unique
+  phone     String?
+  company   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  projects  Project[]
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  slug      String    @unique
+  color     String?
+  createdAt DateTime  @default(now())
+  projects  Project[]
+}
+
+model Contact {
+  id        Int           @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  status    ContactStatus @default(new)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model Task {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  status      TaskStatus @default(todo)
+  priority    Priority   @default(medium)
+  dueDate     DateTime?
+  projectId   Int
+  assigneeId  Int?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee Employee? @relation(fields: [assigneeId], references: [id])
+}
+
+model ProjectTeamMember {
+  id         Int      @id @default(autoincrement())
+  projectId  Int
+  employeeId Int
+  role       String?
+  joinedAt   DateTime @default(now())
+
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, employeeId])
+}
+
+model Setting {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
   admin
   user
   moderator
+}
+
+enum ProjectStatus {
+  planning
+  active
+  completed
+  on_hold
+  cancelled
+}
+
+enum ContactStatus {
+  new
+  replied
+  converted
+  archived
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  completed
+  cancelled
+}
+
+enum Priority {
+  low
+  medium
+  high
+  urgent
 }

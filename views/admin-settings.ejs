@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - DevCraft Admin</title>
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <a href="/admin" class="sidebar-logo">DevCraft Admin</a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="/admin" class="nav-item">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </a>
+        <a href="/admin/projects" class="nav-item">
+          <span class="nav-icon">📁</span>
+          Projects
+        </a>
+        <a href="/admin/contacts" class="nav-item">
+          <span class="nav-icon">📧</span>
+          Contact Forms
+        </a>
+        <a href="/admin/team" class="nav-item">
+          <span class="nav-icon">👥</span>
+          Team Members
+        </a>
+        <a href="/admin/analytics" class="nav-item">
+          <span class="nav-icon">📈</span>
+          Analytics
+        </a>
+        <a href="/admin/settings" class="nav-item active">
+          <span class="nav-icon">⚙️</span>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="admin-header">
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+          <h1 class="header-title">Settings</h1>
+        </div>
+        <div class="header-actions">
+          <div class="user-info">
+            <div class="user-avatar"><%= user.name ? user.name.charAt(0).toUpperCase() : 'A' %></div>
+            <span><%= user.name || 'Admin User' %></span>
+          </div>
+          <button class="logout-btn" onclick="location.href='/admin/logout'">Logout</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <div class="settings-container">
+          <!-- Settings Tabs -->
+          <div class="settings-tabs">
+            <button class="tab-btn active" onclick="showTab('general')">General</button>
+            <button class="tab-btn" onclick="showTab('email')">Email</button>
+            <button class="tab-btn" onclick="showTab('security')">Security</button>
+            <button class="tab-btn" onclick="showTab('integrations')">Integrations</button>
+            <button class="tab-btn" onclick="showTab('backup')">Backup</button>
+          </div>
+
+          <!-- General Settings -->
+          <div id="general" class="tab-content active">
+            <div class="settings-section">
+              <h2>General Settings</h2>
+              <form action="/admin/settings" method="POST">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>Company Name</label>
+                    <input type="text" name="companyName" value="<%= settings.find(s => s.key === 'companyName')?.value || 'DevCraft Solutions' %>">
+                  </div>
+                  <div class="form-group">
+                    <label>Contact Email</label>
+                    <input type="email" name="contactEmail" value="<%= settings.find(s => s.key === 'contactEmail')?.value || 'info@devcraft.com' %>">
+                  </div>
+                  <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" name="phoneNumber" value="<%= settings.find(s => s.key === 'phoneNumber')?.value || '+1 (555) 123-4567' %>">
+                  </div>
+                  <div class="form-group">
+                    <label>Address</label>
+                    <textarea name="address" rows="3"><%= settings.find(s => s.key === 'address')?.value || '123 Tech Street, Silicon Valley, CA 94000' %></textarea>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label>Company Description</label>
+                  <textarea name="description" rows="4"><%= settings.find(s => s.key === 'description')?.value || 'Leading software development company specializing in web and mobile applications.' %></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label>Timezone</label>
+                  <select name="timezone">
+                    <option value="UTC">UTC</option>
+                    <option value="America/New_York">Eastern Time</option>
+                    <option value="America/Chicago">Central Time</option>
+                    <option value="America/Denver">Mountain Time</option>
+                    <option value="America/Los_Angeles" selected>Pacific Time</option>
+                  </select>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Save General Settings</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Email Settings -->
+          <div id="email" class="tab-content">
+            <div class="settings-section">
+              <h2>Email Configuration</h2>
+              <form action="/admin/settings" method="POST">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label>SMTP Host</label>
+                    <input type="text" name="smtpHost" value="<%= settings.find(s => s.key === 'smtpHost')?.value || 'smtp.gmail.com' %>">
+                  </div>
+                  <div class="form-group">
+                    <label>SMTP Port</label>
+                    <input type="number" name="smtpPort" value="<%= settings.find(s => s.key === 'smtpPort')?.value || '587' %>">
+                  </div>
+                  <div class="form-group">
+                    <label>SMTP Username</label>
+                    <input type="text" name="smtpUsername" value="<%= settings.find(s => s.key === 'smtpUsername')?.value || '' %>">
+                  </div>
+                  <div class="form-group">
+                    <label>SMTP Password</label>
+                    <input type="password" name="smtpPassword" placeholder="••••••••">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>
+                    <input type="checkbox" name="smtpSecure" <%= settings.find(s => s.key === 'smtpSecure')?.value === 'true' ? 'checked' : '' %>>
+                    Use SSL/TLS
+                  </label>
+                </div>
+
+                <div class="form-group">
+                  <label>Default From Email</label>
+                  <input type="email" name="fromEmail" value="<%= settings.find(s => s.key === 'fromEmail')?.value || 'noreply@devcraft.com' %>">
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" onclick="testEmail()">Test Connection</button>
+                  <button type="submit" class="btn btn-primary">Save Email Settings</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Security Settings -->
+          <div id="security" class="tab-content">
+            <div class="settings-section">
+              <h2>Security Settings</h2>
+              <form action="/admin/settings" method="POST">
+                <div class="form-group">
+                  <label>Session Timeout (minutes)</label>
+                  <input type="number" name="sessionTimeout" value="<%= settings.find(s => s.key === 'sessionTimeout')?.value || '30' %>">
+                </div>
+
+                <div class="form-group">
+                  <label>Password Requirements</label>
+                  <div class="checkbox-group">
+                    <label>
+                      <input type="checkbox" name="requireUppercase" <%= settings.find(s => s.key === 'requireUppercase')?.value === 'true' ? 'checked' : '' %>>
+                      Require uppercase letters
+                    </label>
+                    <label>
+                      <input type="checkbox" name="requireNumbers" <%= settings.find(s => s.key === 'requireNumbers')?.value === 'true' ? 'checked' : '' %>>
+                      Require numbers
+                    </label>
+                    <label>
+                      <input type="checkbox" name="requireSpecialChars" <%= settings.find(s => s.key === 'requireSpecialChars')?.value === 'true' ? 'checked' : '' %>>
+                      Require special characters
+                    </label>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Minimum Password Length</label>
+                  <input type="number" name="minPasswordLength" value="<%= settings.find(s => s.key === 'minPasswordLength')?.value || '8' %>" min="6" max="32">
+                </div>
+
+                <div class="form-group">
+                  <label>Two-Factor Authentication</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" name="enable2FA" id="enable2FA" <%= settings.find(s => s.key === 'enable2FA')?.value === 'true' ? 'checked' : '' %>>
+                    <label for="enable2FA" class="toggle-label">Enable 2FA</label>
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">Save Security Settings</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Integrations Settings -->
+          <div id="integrations" class="tab-content">
+            <div class="settings-section">
+              <h2>Third-Party Integrations</h2>
+              
+              <!-- Google Analytics -->
+              <div class="integration-item">
+                <div class="integration-header">
+                  <h3>Google Analytics</h3>
+                  <div class="toggle-switch">
+                    <input type="checkbox" name="enableGA" id="enableGA" <%= settings.find(s => s.key === 'enableGA')?.value === 'true' ? 'checked' : '' %>>
+                    <label for="enableGA" class="toggle-label">Enable</label>
+                  </div>
+                </div>
+                <div class="integration-config">
+                  <div class="form-group">
+                    <label>Tracking ID</label>
+                    <input type="text" name="gaTrackingId" value="<%= settings.find(s => s.key === 'gaTrackingId')?.value || '' %>" placeholder="G-XXXXXXXXXX">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Slack Integration -->
+              <div class="integration-item">
+                <div class="integration-header">
+                  <h3>Slack Notifications</h3>
+                  <div class="toggle-switch">
+                    <input type="checkbox" name="enableSlack" id="enableSlack" <%= settings.find(s => s.key === 'enableSlack')?.value === 'true' ? 'checked' : '' %>>
+                    <label for="enableSlack" class="toggle-label">Enable</label>
+                  </div>
+                </div>
+                <div class="integration-config">
+                  <div class="form-group">
+                    <label>Webhook URL</label>
+                    <input type="url" name="slackWebhook" value="<%= settings.find(s => s.key === 'slackWebhook')?.value || '' %>" placeholder="https://hooks.slack.com/...">
+                  </div>
+                  <div class="form-group">
+                    <label>Channel</label>
+                    <input type="text" name="slackChannel" value="<%= settings.find(s => s.key === 'slackChannel')?.value || '#general' %>" placeholder="#general">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Payment Gateway -->
+              <div class="integration-item">
+                <div class="integration-header">
+                  <h3>Payment Gateway (Stripe)</h3>
+                  <div class="toggle-switch">
+                    <input type="checkbox" name="enableStripe" id="enableStripe" <%= settings.find(s => s.key === 'enableStripe')?.value === 'true' ? 'checked' : '' %>>
+                    <label for="enableStripe" class="toggle-label">Enable</label>
+                  </div>
+                </div>
+                <div class="integration-config">
+                  <div class="form-group">
+                    <label>Publishable Key</label>
+                    <input type="text" name="stripePublishableKey" value="<%= settings.find(s => s.key === 'stripePublishableKey')?.value || '' %>" placeholder="pk_...">
+                  </div>
+                  <div class="form-group">
+                    <label>Secret Key</label>
+                    <input type="password" name="stripeSecretKey" placeholder="sk_...">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Save Integration Settings</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Backup Settings -->
+          <div id="backup" class="tab-content">
+            <div class="settings-section">
+              <h2>Backup & Maintenance</h2>
+              
+              <div class="backup-section">
+                <h3>Database Backup</h3>
+                <div class="form-group">
+                  <label>Automatic Backup</label>
+                  <div class="toggle-switch">
+                    <input type="checkbox" name="enableAutoBackup" id="enableAutoBackup" <%= settings.find(s => s.key === 'enableAutoBackup')?.value === 'true' ? 'checked' : '' %>>
+                    <label for="enableAutoBackup" class="toggle-label">Enable</label>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label>Backup Frequency</label>
+                  <select name="backupFrequency">
+                    <option value="daily" <%= settings.find(s => s.key === 'backupFrequency')?.value === 'daily' ? 'selected' : '' %>>Daily</option>
+                    <option value="weekly" <%= settings.find(s => s.key === 'backupFrequency')?.value === 'weekly' ? 'selected' : '' %>>Weekly</option>
+                    <option value="monthly" <%= settings.find(s => s.key === 'backupFrequency')?.value === 'monthly' ? 'selected' : '' %>>Monthly</option>
+                  </select>
+                </div>
+
+                <div class="backup-actions">
+                  <button type="button" class="btn btn-secondary" onclick="createBackup()">Create Backup Now</button>
+                  <button type="button" class="btn btn-secondary" onclick="downloadBackup()">Download Latest</button>
+                  <button type="button" class="btn btn-warning" onclick="restoreBackup()">Restore Backup</button>
+                </div>
+              </div>
+
+              <div class="maintenance-section">
+                <h3>System Maintenance</h3>
+                <div class="maintenance-actions">
+                  <div class="maintenance-item">
+                    <div class="maintenance-info">
+                      <h4>Clear Cache</h4>
+                      <p>Remove temporary files and cached data</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="clearCache()">Clear Cache</button>
+                  </div>
+                  
+                  <div class="maintenance-item">
+                    <div class="maintenance-info">
+                      <h4>Optimize Database</h4>
+                      <p>Clean up and optimize database tables</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="optimizeDatabase()">Optimize</button>
+                  </div>
+                  
+                  <div class="maintenance-item">
+                    <div class="maintenance-info">
+                      <h4>System Logs</h4>
+                      <p>View and download system logs</p>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="downloadLogs()">Download Logs</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="system-info">
+                <h3>System Information</h3>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <label>Version:</label>
+                    <span>v2.1.0</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Database:</label>
+                    <span>PostgreSQL 14.2</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Node.js:</label>
+                    <span>v18.17.0</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Last Backup:</label>
+                    <span>June 29, 2025 - 10:30 AM</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Uptime:</label>
+                    <span>15 days, 4 hours</span>
+                  </div>
+                  <div class="info-item">
+                    <label>Storage Used:</label>
+                    <span>2.4 GB / 10 GB</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/admin.js"></script>
+  <script>
+    function showTab(tabName) {
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Remove active class from all tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected tab
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    function testEmail() {
+      const form = event.target.closest('form');
+      const formData = new FormData(form);
+      
+      fetch('/admin/settings/test-email', {
+        method: 'POST',
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('Email test successful! Check your inbox.');
+        } else {
+          alert('Email test failed: ' + data.error);
+        }
+      })
+      .catch(error => {
+        alert('Error testing email: ' + error.message);
+      });
+    }
+
+    function createBackup() {
+      if (confirm('Create a new database backup? This may take a few minutes.')) {
+        fetch('/admin/settings/backup', {
+          method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Backup created successfully!');
+          } else {
+            alert('Backup failed: ' + data.error);
+          }
+        })
+        .catch(error => {
+          alert('Error creating backup: ' + error.message);
+        });
+      }
+    }
+
+    function downloadBackup() {
+      window.open('/admin/settings/backup/download', '_blank');
+    }
+
+    function restoreBackup() {
+      if (confirm('WARNING: This will restore the database from the latest backup. All current data since the backup will be lost. Continue?')) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.sql,.gz';
+        input.onchange = function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            const formData = new FormData();
+            formData.append('backup', file);
+            
+            fetch('/admin/settings/backup/restore', {
+              method: 'POST',
+              body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                alert('Backup restored successfully! Please refresh the page.');
+                location.reload();
+              } else {
+                alert('Restore failed: ' + data.error);
+              }
+            })
+            .catch(error => {
+              alert('Error restoring backup: ' + error.message);
+            });
+          }
+        };
+        input.click();
+      }
+    }
+
+    function clearCache() {
+      if (confirm('Clear all cached data?')) {
+        fetch('/admin/settings/clear-cache', {
+          method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Cache cleared successfully!');
+          } else {
+            alert('Failed to clear cache: ' + data.error);
+          }
+        })
+        .catch(error => {
+          alert('Error clearing cache: ' + error.message);
+        });
+      }
+    }
+
+    function optimizeDatabase() {
+      if (confirm('Optimize database? This may take a few minutes.')) {
+        fetch('/admin/settings/optimize-db', {
+          method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            alert('Database optimized successfully!');
+          } else {
+            alert('Optimization failed: ' + data.error);
+          }
+        })
+        .catch(error => {
+          alert('Error optimizing database: ' + error.message);
+        });
+      }
+    }
+
+    function downloadLogs() {
+      window.open('/admin/settings/logs/download', '_blank');
+    }
+
+    // Save settings automatically when form fields change
+    document.querySelectorAll('form input, form select, form textarea').forEach(field => {
+      field.addEventListener('change', function() {
+        // Auto-save logic can be implemented here
+        console.log('Field changed:', field.name, field.value);
+      });
+    });
+  </script>
+</body>
+</html>

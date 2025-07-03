@@ -25,24 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Handle navigation item clicks
-  document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', function(e) {
-      e.preventDefault();
-      
-      // Remove active class from all items
-      document.querySelectorAll('.nav-item').forEach(nav => {
-        nav.classList.remove('active');
-      });
-      
-      // Add active class to clicked item
-      this.classList.add('active');
-      
-      // Update page title
-      const pageName = this.textContent.trim();
-      document.querySelector('.header-title').textContent = pageName;
-    });
-  });
 });
 
 // Initialize charts
